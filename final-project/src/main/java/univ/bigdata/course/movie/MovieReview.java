@@ -10,6 +10,15 @@ import java.util.Date;
 
 public class MovieReview {
 
+	public static final String proIDPrefix = "product/productId:";
+	public static final String userIDPrefix = "review/userId:";
+	public static final String profNamePrefix = "review/profileName:";
+	public static final String helpPrefix = "review/helpfulness:";
+	public static final String scorePrefix = "review/score:";
+	public static final String timePrefix = "review/time:";
+	public static final String summeryPrefix = "review/summary:";
+	public static final String textPrefix = "review/text:";
+
     private Movie movie;
 
     private String userId;
@@ -27,6 +36,31 @@ public class MovieReview {
     public MovieReview() {
     }
 
+    public MovieReview(String line) {
+		String productId;
+		Double score;
+
+		// parse current line (movie review)
+		productId = line.substring((line.indexOf(proIDPrefix) + proIDPrefix.length() + 1),
+				line.indexOf(userIDPrefix) - 1);
+		score = Double.valueOf(
+				line.substring((line.indexOf(scorePrefix) + scorePrefix.length() + 1), (line.indexOf(timePrefix) - 1)));
+		movie = new Movie(productId, score);
+
+		// create movie review
+		userId = line.substring((line.indexOf(userIDPrefix) + userIDPrefix.length() + 1),
+				line.indexOf(profNamePrefix) - 1);
+		profileName = line.substring((line.indexOf(profNamePrefix) + profNamePrefix.length() + 1),
+				line.indexOf(helpPrefix) - 1);
+		helpfulness = line.substring((line.indexOf(helpPrefix) + helpPrefix.length() + 1),
+				line.indexOf(scorePrefix) - 1);
+		summary = line.substring((line.indexOf(summeryPrefix) + summeryPrefix.length() + 1),
+				line.indexOf(textPrefix) - 1);
+		review = line.substring(line.indexOf(textPrefix) + textPrefix.length() + 1);
+		timestamp = new Date(Long.valueOf(
+				line.substring((line.indexOf(timePrefix) + timePrefix.length() + 1), line.indexOf(summeryPrefix) - 1)));
+    }
+    
     public MovieReview(Movie movie, String userId, String profileName, String helpfulness, Date timestamp, String summary, String review) {
         this.movie = movie;
         this.userId = userId;
