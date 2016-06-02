@@ -13,5 +13,8 @@ public class MainRunner {
     	//call first implemented function
         moviesNum = moviesStorage.moviesCount();
         System.out.println("number of movies " + moviesNum);
+        Double total = moviesStorage.totalMoviesAverageScore();
+        System.out.println("total Movies Average Score " + total);
+        System.out.println("total Movies B00004CK40 Average Score " + moviesStorage.totalMovieAverage("B00004CK40"));
     }
 }

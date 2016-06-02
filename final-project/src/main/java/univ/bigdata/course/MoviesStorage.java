@@ -15,6 +15,11 @@ import univ.bigdata.course.providers.MoviesProvider;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.spark.api.java.function.Function2;
+
+import scala.Enumeration.Val;
+import scala.collection.mutable.LinkedHashMap;
+
 /**
  * Main class which capable to keep all information regarding movies review.
  * Has to implements all methods from @{@link IMoviesStorage} interface.
@@ -44,14 +49,24 @@ public class MoviesStorage implements IMoviesStorage {
 		movieReviews = fileLines.map(MovieReview::new);
     }
 
-    @Override
+	@SuppressWarnings("serial")
+	@Override
 	public double totalMoviesAverageScore() {
-		throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	Double Average;
+    	JavaRDD<Double> moviesScore = movieReviews.map(movie -> movie.getMovie().getScore());
+    	
+    	Average =  moviesScore.reduce((x1,x2) -> x1+x2);
+    	return Average/moviesScore.count();
+		//throw new UnsupportedOperationException("You have to implement this method on your own.");
 	}
 
     @Override
     public double totalMovieAverage(String productId) {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	JavaRDD<MovieReview> movies = movieReviews.filter(movie -> movie.getMovie().getProductId().contains(productId));
+        JavaRDD<Double> score = movies.map(movie -> movie.getMovie().getScore());
+        double Average = score.reduce((x1,x2) -> x1+x2);
+        return Average/score.count();
+    	//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
     @Override
@@ -84,7 +99,8 @@ public class MoviesStorage implements IMoviesStorage {
     	throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
-    @Override
+   
+	@Override
     public Map<String, Long> moviesReviewWordsCount(int topK) {
     	throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
