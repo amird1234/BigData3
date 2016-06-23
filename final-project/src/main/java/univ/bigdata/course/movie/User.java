@@ -8,6 +8,12 @@ package univ.bigdata.course.movie;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+
+import org.apache.spark.mllib.recommendation.Rating;
+
+import comparators.RecommandtionComperator;
+import scala.Tuple2;
 
 public class User {
 	String userID;
@@ -15,6 +21,7 @@ public class User {
 	Double helpfulness;
 	Integer numOfReviews;
 	Boolean helpFull = false;
+	ArrayList<Tuple2<Double, String>> recommendations;
 
 	public User(String userID, Integer numerator, Integer denominator, Integer numOfReviews) {
 		super();
@@ -25,6 +32,16 @@ public class User {
 		this.numOfReviews = numOfReviews;
 
 		this.calcHelpfulness();
+	}
+	
+	public User(String userID, ArrayList<Tuple2<Double, String>> Recommendations){
+		this.userID = userID;
+		this.recommendations = Recommendations;
+		this.recommendations.sort(new RecommandtionComperator());
+	}
+
+	public User(String string, Rating[] _2) {
+		userID = string;
 	}
 
 	private Double round(Double value, int places) {
@@ -69,5 +86,14 @@ public class User {
 		this.numerator += numeratorDelta;
 		this.denominator += denominatorDelta;
 		this.calcHelpfulness();
+	}
+	
+	public String printRecommendations(){
+		String recString = "Recommendations for " + userID + ":\n";
+		for(Tuple2<Double, String> recommand : recommendations){
+			recString += recommand._2 + "Score:" + recommand._1;
+		}
+		
+		return recString;
 	}
 }

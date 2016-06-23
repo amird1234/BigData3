@@ -63,7 +63,7 @@ public final class JavaPageRank {
     }
   }
 
-  public static void Rank(JavaRDD<String> ranksrdd, int numOfIterations) throws Exception {
+  public static List<Tuple2<String, Double>> Rank(JavaRDD<String> ranksrdd, int numOfIterations) throws Exception {
 
 
 //    showWarning();
@@ -134,6 +134,8 @@ public final class JavaPageRank {
     for (Tuple2<?,?> tuple : output) {
         System.out.println(tuple._1() + " has rank: " + tuple._2() + ".");
     }
+    
+    return output;
 
 //    spark.stop();
   }
