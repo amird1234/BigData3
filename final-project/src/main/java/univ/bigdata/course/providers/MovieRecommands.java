@@ -7,10 +7,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.Rating;
-import org.apache.spark.mllib.tree.model.Predict;
-import org.apache.spark.rdd.RDD;
 
-import breeze.optimize.LineSearch;
+import comparators.RecommandtionComperator;
 
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel;
 
@@ -24,9 +22,6 @@ import static java.lang.Math.toIntExact;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 public class MovieRecommands {
@@ -100,8 +95,10 @@ public class MovieRecommands {
 			    	.join(moviesIndexed.mapToPair(movie -> new Tuple2<>(movie._2, movie._1)))
 			    	//(
 			    	.mapToPair(f -> new Tuple2<>(f._2._1, f._2._2));
-			    	ArrayList<Tuple2<Double, String>> recommendations = new ArrayList<>();
-			    	currentUserPredicts.foreach(p -> recommendations.add(p));
+			    	List<Tuple2<Double, String>> recommendations;// = new ArrayList<>();
+//			    	currentUserPredicts.foreach(recommendations::add);	
+			    	recommendations = currentUserPredicts.takeOrdered(10,new RecommandtionComperator());
+//			    	List<Tuple2<Double, String>> recommendations = currentUserPredicts.collect();
 			    	UserRecs.add(new User(currentuser._1,recommendations));
 			    }
 		    }

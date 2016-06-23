@@ -1,7 +1,9 @@
 package univ.bigdata.course;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.PrintStream;
 import java.util.List;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -16,9 +18,7 @@ public class MainRunner {
 
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
-    	long moviesNum = 0;
-    		
-//    	CommandType query = CommandType.fromString(args[0]);
+    	//    	CommandType query = CommandType.fromString(args[0]);
     	CommandType query = CommandType.fromString("recommend");
     	
     	switch (query) {
@@ -55,13 +55,17 @@ public class MainRunner {
 		case RECOMMEND:
 			//String RecommendationFileName = args[1];
 			String RecommendationFileName = "recommend.txt";
+			
+			
 			try(BufferedReader br = new BufferedReader(new FileReader(RecommendationFileName))) {
 			    String inputPath = br.readLine();
 			    String outputPath = br.readLine();
 			    
+			    PrintStream printer  = new PrintStream (new File(outputPath));
+			    
 		    	//initialize movie storage and spark context
 		    	MovieRecommands mr = new MovieRecommands(inputPath);
-		    	mr.recommend(RecommendationFileName).forEach(a->a.printRecommendations());
+		    	mr.recommend(RecommendationFileName).forEach(a->printer.println(a.printRecommendations()));
 //		    	moviesStorage.startQueryRunner(outputPath);
 //		    	
 //		    	//read first user id
@@ -75,6 +79,7 @@ public class MainRunner {
 //		        } 
 //		        br.close();
 			}catch (Exception e) {
+				e.printStackTrace();
 				throw new IllegalArgumentException("Program Second argument is illegal.");
 			}finally {
 				if(moviesStorage != null){
@@ -115,17 +120,5 @@ public class MainRunner {
 			throw new IllegalArgumentException("Ptogram First argument is illegal, needs to be commands/recommend/mappagerank");
 		
 		}
-    	/*
-    	String inputPath = args[0];
-    	//initialize movie storage and spark context
-    	moviesStorage = new MoviesStorage(inputPath);
-        
-    	//call first implemented function
-        moviesNum = moviesStorage.moviesCount();
-        System.out.println("number of movies " + moviesNum);
-        Double total = moviesStorage.totalMoviesAverageScore();
-        System.out.println("total Movies Average Score " + total);
-        System.out.println("total Movies B00004CK40 Average Score " + moviesStorage.totalMovieAverage("B00004CK40"));
-    	 */
     }
 }
