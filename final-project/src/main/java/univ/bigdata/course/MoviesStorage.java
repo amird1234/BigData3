@@ -92,16 +92,64 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public String mostReviewedProduct() {
+    	/*
+    	Map<String,Long> temp = reviewCountPerMovieTopKMovies(1);
+		if(!temp.isEmpty())
+		{
+			Map.Entry<String,Long> entry=temp.entrySet().iterator().next();
+			return entry.getKey();
+		}
+		else
+			return null;
+    	 */
     	throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
     @Override
     public Map<String, Long> reviewCountPerMovieTopKMovies(int topK) {
+    	/*
+    	if(topK < 0)
+        	throw new RuntimeException();
+    		
+    	Map<String,Long> reviewCount = movieReviews.mapToPair(s -> new Tuple2<>(s.getMovie().getProductId(), 1))
+                    .reduceByKey((a, b) -> a + b).filter(s -> s._2 >= topK);
+    				
+    	List<Movie> sortedList = new ArrayList<>();
+    	for (Map.Entry<String, Long> entry : reviewCount.entrySet())
+    	{
+    		Movie m = new Movie(entry.getKey(),entry.getValue());
+    		sortedList.add(m);
+    	}
+    	sortedList.sort(new MovieScoreComparator());
+    	
+    	reviewCount.clear();
+    	for (Movie m : sortedList) reviewCount.put(m.getProductId(), (long)m.getScore());
+    	return reviewCount;
+    	 */
     	throw new UnsupportedOperationException("You have to implement this method on your own."); 
     }
 
     @Override
     public String mostPopularMovieReviewedByKUsers(int numOfUsers) {
+    	/*
+    	if(numOfUsers < 0)
+			throw new RuntimeException();
+	
+		List<Movie> popularMovie =  movieReviews
+            .mapToPair(s-> new Tuple2<>(s.getMovie().getProductId(), new Tuple2<>(s.getMovie().getScore(), 1)))
+            .reduceByKey((a, b)-> new Tuple2<>(a._1 + b._1, a._2 + b._2))
+            .filter(s -> s._2._2 >= numOfUsers).map(s -> new Movie(s._1, s._2._1));
+	
+		if(!popularMovie.isEmpty())
+		{
+			popularMovie.sort(new MovieScoreComparator());
+			return popularMovie.get(0).getProductId();
+		}
+		else
+		{
+			return null;
+		}
+    	 */
     	throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
@@ -150,6 +198,29 @@ public class MoviesStorage implements IMoviesStorage {
      * @return
      */
     public Map<String, Double> topKHelpfullUsers(int k) {
+    	/*
+    	if(k < 0)
+    		throw new RuntimeException();
+
+    	Map<String, Double> topKHelpfullUsersRetVal = new LinkedHashMap<String, Double>();
+    	List<User> usersList = movieReviews
+                .mapToPair(a -> new Tuple2<>(a.getUserId(), a.getHelpfulness()))
+                .mapToPair(s -> new Tuple2<>(s._1, new Tuple2<>(Double.parseDouble(s._2.substring(0,s._2.lastIndexOf('/'))),
+                        Double.parseDouble(s._2.substring(s._2.lastIndexOf('/') + 1, s._2.length())))))
+                .filter(s -> s._2._2 != 0)
+                .reduceByKey((a,b) -> new Tuple2<>(a._1 + b._1, a._2 + b._2))
+                .map(s -> new User(s._1, s._2._1/s._2._2));
+
+    	// reduce list to only top K reviewers
+    	usersList = usersList.subList(0, java.lang.Math.min(k, usersList.size()));
+
+    	// translate List into a Map
+    	for (User user : usersList) {
+    		topKHelpfullUsersRetVal.put(user.getUserID(), user.getHelpfullness());
+    	}
+
+    	return topKHelpfullUsersRetVal;
+    	 */
     	throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
