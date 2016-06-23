@@ -15,12 +15,16 @@ import univ.bigdata.course.providers.MoviesProvider;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Enumeration.Val;
+import scala.Tuple2;
 import scala.collection.mutable.LinkedHashMap;
 
 /**
@@ -62,7 +66,7 @@ public class MoviesStorage implements IMoviesStorage {
     	JavaRDD<Double> moviesScore = movieReviews.map(movie -> movie.getMovie().getScore());
     	
     	Average =  moviesScore.reduce((x1,x2) -> x1+x2);
-    	return Average/moviesScore.count();
+    	return Math.round((Average/moviesScore.count())*100000)/100000.0d;
 		//throw new UnsupportedOperationException("You have to implement this method on your own.");
 	}
 
@@ -71,7 +75,7 @@ public class MoviesStorage implements IMoviesStorage {
     	JavaRDD<MovieReview> movies = movieReviews.filter(movie -> movie.getMovie().getProductId().contains(productId));
         JavaRDD<Double> score = movies.map(movie -> movie.getMovie().getScore());
         double Average = score.reduce((x1,x2) -> x1+x2);
-        return Average/score.count();
+        return Math.round((Average/score.count())*100000)/100000.0d;
     	//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
@@ -82,12 +86,8 @@ public class MoviesStorage implements IMoviesStorage {
 
     @Override
     public Movie movieWithHighestAverage() {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
-    }
-
-    @Override
-    public List<Movie> getMoviesPercentile(double percentile) {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	return getTopKMoviesAverage(1).get(0);
+    	//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
     @Override
@@ -108,24 +108,29 @@ public class MoviesStorage implements IMoviesStorage {
    
 	@Override
     public Map<String, Long> moviesReviewWordsCount(int topK) {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
-    }
-    /**
-     * Help function get long topMovies instead of int.
-     * and compute map that define at topYMoviewsReviewTopXWordsCount
-     * (Compute words count map for top Y most reviewed movies. Map includes top K words.)
-     *
-     * @param topMovies - number of top review movies (long)
-     * @param topWords - number of top words to return
-     * @return - map of words to count, ordered by count in decreasing order.
-     */
-    public Map<String, Long> topYMoviewsReviewTopXWordsCountLong(long topMovies, int topWords) {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+		return topYMoviewsReviewTopXWordsCount((int)moviesCount(),topK);
+		//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
     
     @Override
     public Map<String, Long> topYMoviewsReviewTopXWordsCount(int topMovies, int topWords) {
-        return topYMoviewsReviewTopXWordsCountLong((long)topMovies, topWords);
+    	Map<String,Long> topYMovies = reviewCountPerMovieTopKMovies(topMovies);
+    	Map<String,Long> wordCount;
+    	JavaRDD<String> input = movieReviews.filter(s-> topYMovies.containsKey(s.getMovie().getProductId())).mapToPair(s->new Tuple2<>(s.getMovie(), s.getReview())).distinct().values();
+    	JavaRDD<String> words =input.flatMap(
+    		      new FlatMapFunction<String, String>() {
+    		          public Iterable<String> call(String x) {
+    		            return Arrays.asList(x.split(" "));
+    		          }});
+    	JavaPairRDD<String, Integer> counts = words.mapToPair(
+    		      new PairFunction<String, String, Integer>(){
+    		        public Tuple2<String, Integer> call(String x){
+    		          return new Tuple2(x, 1);
+    		        }}).reduceByKey(new Function2<Integer, Integer, Integer>(){
+    		            public Integer call(Integer x, Integer y){ return x + y;}});
+    	wordCount =(Map<String, Long>) counts;
+        return wordCount;
+    	//return topYMoviewsReviewTopXWordsCountLong((long)topMovies, topWords);
     }
 
     @Override
@@ -230,5 +235,13 @@ public class MoviesStorage implements IMoviesStorage {
 		default:
 			break;
 		}
+    }
+    public  JavaRDD<String> getPairedUser(){
+    	//users and movies list
+    	JavaPairRDD<String, String> UsersMovies = movieReviews.mapToPair(s->new Tuple2<>(s.getMovie().getProductId(), s.getUserId())).distinct();
+    	//user and user list
+        JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))<0)).map(s->s._2._1 + " " + s._2._2).distinct();
+        JavaRDD<String> UserUser2 = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))>0)).map(s->s._2._2 + " " + s._2._1).distinct();
+        return UserUser.union(UserUser2).distinct();
     }
 }

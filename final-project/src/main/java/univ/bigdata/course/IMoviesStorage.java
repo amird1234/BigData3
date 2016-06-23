@@ -49,17 +49,6 @@ public interface IMoviesStorage {
     Movie movieWithHighestAverage();
 
     /**
-     * Returns a list of movies which has average of given percentile.
-     * List should be sorted according the average score of movie and in case there
-     * are more than one movie with same average score, sort by product id
-     * lexicographically in natural order.
-     *
-     * @param percent - the percentile, value in range between [0..100]
-     * @return - movies list
-     */
-    List<Movie> getMoviesPercentile(final double percent);
-
-    /**
      * @return - the product id of most reviewed movie among all movies
      */
     String mostReviewedProduct();
