@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -12,6 +13,7 @@ import comparators.PageRankComperator;
 import enums.CommandType;
 import scala.Tuple2;
 import univ.bigdata.course.movie.Movie;
+import univ.bigdata.course.movie.PageRankResults;
 import univ.bigdata.course.providers.MovieRecommands;
 
 public class MainRunner {
@@ -19,7 +21,7 @@ public class MainRunner {
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
     	//    	CommandType query = CommandType.fromString(args[0]);
-    	CommandType query = CommandType.fromString("recommend");
+    	CommandType query = CommandType.fromString("pagerank");
     	
     	switch (query) {
 		case COMMANDS:
@@ -94,19 +96,22 @@ public class MainRunner {
 			
 		case PAGE_RANK:
 
-			String movieSimpleFile = args[1];
+//			String movieSimpleFile = args[1];
+			
+			String movieSimpleFile = "movies-simple.txt";
 	    	//initialize movie storage and spark context
 	    	moviesStorage = new MoviesStorage(movieSimpleFile);
 	    	
-			JavaRDD<String> Edges = null;
+			JavaRDD<String> Edges = moviesStorage.getPairedUser();
+			List<String> t = Edges.collect();
 			//TODO: Need to insert Carmi Code to generate JavaRDD<String>
 			try {
-				List<Tuple2<String, Double>> PRresults = JavaPageRank.Rank(Edges, 100);
+				List<PageRankResults> unmodifiablePRresults = JavaPageRank.Rank(Edges, 100);
+				List<PageRankResults> modifiablePRresults = new ArrayList<PageRankResults>(unmodifiablePRresults);
+				modifiablePRresults.sort(new PageRankComperator());
 				
-				PRresults.sort(new PageRankComperator());
-				
-				if(PRresults.size() > 100){
-					PRresults = PRresults.subList(0, 99);
+				if(modifiablePRresults.size() > 100){
+					modifiablePRresults = modifiablePRresults.subList(0, 99);
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

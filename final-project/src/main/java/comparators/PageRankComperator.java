@@ -1,17 +1,19 @@
 package comparators;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import scala.Tuple2;
+import univ.bigdata.course.movie.PageRankResults;
 
-public class PageRankComperator implements Comparator<Tuple2<String, Double>>{
+public class PageRankComperator implements Comparator<PageRankResults>, Serializable{
 
 	@Override
-	public int compare(Tuple2<String, Double> o1, Tuple2<String, Double> o2) {
-		if(o1._2 == o2._2){
-			return o1._1.compareTo(o2._1);
+	public int compare(PageRankResults o1, PageRankResults o2) {
+		if(o1.score == o2.score){
+			return o1.id.compareTo(o2.id);
 		}else{
-			return o1._2.compareTo(o2._2);
+			return o1.score.compareTo(o2.score);
 		}
 	}
 
