@@ -95,14 +95,12 @@ public class MovieRecommands {
 			    	.join(moviesIndexed.mapToPair(movie -> new Tuple2<>(movie._2, movie._1)))
 			    	//(
 			    	.mapToPair(f -> new Tuple2<>(f._2._1, f._2._2));
-			    	List<Tuple2<Double, String>> recommendations;// = new ArrayList<>();
-//			    	currentUserPredicts.foreach(recommendations::add);	
+			    	List<Tuple2<Double, String>> recommendations;
 			    	recommendations = currentUserPredicts.takeOrdered(10,new RecommandtionComperator());
-//			    	List<Tuple2<Double, String>> recommendations = currentUserPredicts.collect();
+
 			    	UserRecs.add(new User(currentuser._1,recommendations));
 			    }
 		    }
-//			MovsReviws.filter(a-> lines.contains(o))
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

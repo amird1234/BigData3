@@ -68,18 +68,7 @@ public class MainRunner {
 		    	//initialize movie storage and spark context
 		    	MovieRecommands mr = new MovieRecommands(inputPath);
 		    	mr.recommend(RecommendationFileName).forEach(a->printer.println(a.printRecommendations()));
-//		    	moviesStorage.startQueryRunner(outputPath);
-//		    	
-//		    	//read first user id
-//		    	String line = br.readLine();
-//		    	//while we have a new user id
-//		        while (line != null) {
-//		        	//get recommendations
-//		        	//TODO: Need to implement the recommendations
-//		        	//read next user id
-//		            line = br.readLine();
-//		        } 
-//		        br.close();
+
 			}catch (Exception e) {
 				e.printStackTrace();
 				throw new IllegalArgumentException("Program Second argument is illegal.");
@@ -92,6 +81,30 @@ public class MainRunner {
 			
 		case MAP_COMMAND:
 			
+			
+			//String RecommendationFileName = args[1];
+			String Movies_train = "recommend.txt";
+			String Movies_test	= "test.txt";
+			
+			
+			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
+			    
+//			    PrintStream printer  = new PrintStream (new File(outputPath));
+			    
+		    	//initialize movie storage and spark context
+		    	MovieRecommands mr = new MovieRecommands(Movies_test);
+		    	mr.recommend(Movies_train);//.forEach(a->.println(a.printRecommendations()));
+
+			}catch (Exception e) {
+				e.printStackTrace();
+				throw new IllegalArgumentException("Program Second argument is illegal.");
+			}finally {
+				if(moviesStorage != null){
+					moviesStorage.closeJavaSparkContext();
+				}
+			} 
+			
+			
 			break;
 			
 		case PAGE_RANK:
@@ -103,7 +116,7 @@ public class MainRunner {
 	    	moviesStorage = new MoviesStorage(movieSimpleFile);
 	    	
 			JavaRDD<String> Edges = moviesStorage.getPairedUser();
-			List<String> t = Edges.collect();
+
 			//TODO: Need to insert Carmi Code to generate JavaRDD<String>
 			try {
 				List<PageRankResults> unmodifiablePRresults = JavaPageRank.Rank(Edges, 100);
