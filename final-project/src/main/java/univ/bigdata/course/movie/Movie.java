@@ -6,7 +6,9 @@ Amir dahan; Amird1234@gmail.com; 039593801
 */
 package univ.bigdata.course.movie;
 
-public class Movie {
+import java.io.Serializable;
+
+public class Movie implements Serializable{
 
     private String productId;
 

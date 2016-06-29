@@ -21,7 +21,7 @@ public class MainRunner {
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
     	//    	CommandType query = CommandType.fromString(args[0]);
-    	CommandType query = CommandType.fromString("pagerank");
+    	CommandType query = CommandType.fromString("map");
     	
     	switch (query) {
 		case COMMANDS:
@@ -83,18 +83,18 @@ public class MainRunner {
 			
 			
 			//String RecommendationFileName = args[1];
-			String Movies_train = "recommend.txt";
+			String Movies_train = "train.txt";
 			String Movies_test	= "test.txt";
 			
 			
-			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
-			    
+//			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
+			    try{
 //			    PrintStream printer  = new PrintStream (new File(outputPath));
 			    
 		    	//initialize movie storage and spark context
-		    	MovieRecommands mr = new MovieRecommands(Movies_test);
-		    	mr.recommend(Movies_train);//.forEach(a->.println(a.printRecommendations()));
-
+		    	MovieRecommands mr = new MovieRecommands(Movies_train,Movies_test);
+//		    	mr.recommend(Movies_train);//.forEach(a->.println(a.printRecommendations()));
+		    	Double ans = mr.getMAPValue();
 			}catch (Exception e) {
 				e.printStackTrace();
 				throw new IllegalArgumentException("Program Second argument is illegal.");

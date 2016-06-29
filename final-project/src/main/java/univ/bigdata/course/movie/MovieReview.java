@@ -6,9 +6,10 @@ Amir dahan; Amird1234@gmail.com; 039593801
 */
 package univ.bigdata.course.movie;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class MovieReview {
+public class MovieReview implements Serializable{
 
 	public static final String proIDPrefix = "product/productId:";
 	public static final String userIDPrefix = "review/userId:";
