@@ -83,8 +83,8 @@ public class MainRunner {
 			
 			
 			//String RecommendationFileName = args[1];
-			String Movies_train = "train.txt";
-			String Movies_test	= "test.txt";
+			String Movies_train = "train80_20.txt";
+			String Movies_test	= "test80_20.txt";
 			
 			
 //			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
