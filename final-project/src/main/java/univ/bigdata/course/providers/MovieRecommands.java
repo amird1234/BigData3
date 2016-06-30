@@ -5,8 +5,11 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.evaluation.RankingMetrics;
 import org.apache.spark.mllib.recommendation.ALS;
 import org.apache.spark.mllib.recommendation.Rating;
+
+import com.esotericsoftware.minlog.Log;
 
 import comparators.RecommandtionComperator;
 
@@ -94,12 +97,25 @@ public class MovieRecommands {
 		// Build a model based on the training file
 		this(traningFile);
 		
-		List<Tuple2<String, Integer>> userString = usersIndexed.collect();
+		Integer counter = 0;
 		
-		if(!userString.isEmpty()){
+		JavaRDD<String> testRecString = sc.textFile(testFile);
+		
+//		List<Tuple2<String, Integer>> userString = usersIndexed.collect();
+		JavaRDD<MovieReview> relevantMoviesAll = testRecString
+				.map(MovieReview::new)
+				.filter(MovieR -> MovieR.getMovie().getScore() >= 3);
+		
+        // (UserID, userIndex)
+		JavaPairRDD<String, Integer> usersIndexedTest = relevantMoviesAll.map(rev->rev.getUserId()).distinct().zipWithIndex()
+                										.mapToPair(uid->new Tuple2<>(uid._1, toIntExact(uid._2)));
+        
+		List<Tuple2<String, Integer>> userString = usersIndexed.join(usersIndexedTest).mapToPair(f -> new Tuple2<>(f._1, f._2._1)).collect();
+		
+        if(!userString.isEmpty()){
 		    for(Tuple2<String, Integer> currentuser : userString){
-		    	JavaPairRDD<Tuple2<String,String>, Integer> relevantMovies;
 		    	
+		    	counter++;
 		    	//1) create a (user,movie) tuples from predict sorted by rating
 		    	//(MovieReview)
 		    	JavaPairRDD<String, String> currentUserPredicts = model.predict(MovsReviws.filter(review -> !review.getUserId().equals(currentuser._1))
@@ -124,11 +140,8 @@ public class MovieRecommands {
 		    	JavaPairRDD<Tuple2<String, String>,Integer> currentUserPredictsIndexed = currentUserPredicts.zipWithIndex().mapToPair(f -> new Tuple2<>(new Tuple2<>(f._1._1,f._1._2),toIntExact(f._2)));
     			
 				//4) get all movies from test set (besides score<3.0)
-				JavaRDD<String> testRecString = sc.textFile(testFile);
 				// Take only those with score 3 or higher
-				relevantMovies = testRecString
-						.map(MovieReview::new)
-						.filter(MovieR -> MovieR.getMovie().getScore() >= 3)
+		    	JavaPairRDD<Tuple2<String,String>, Integer> relevantMovies = relevantMoviesAll
 						.mapToPair(f -> new Tuple2<>(new Tuple2<>(f.getUserId(),f.getMovie().getProductId()),null));
 				
 				//5) join with filter function that let records get in only if user & movie match.
@@ -147,9 +160,9 @@ public class MovieRecommands {
 		    }
 		    MAPValue = MAPSum/MAPCounter;
 		    
+		
 		}
-		
-		
+        
 	}
 	
 	public Double getMAPValue(){
@@ -196,6 +209,14 @@ public class MovieRecommands {
 		}
 		return UserRecs;
 		
+	}
+	
+	
+	private JavaRDD<MovieReview> getReleventUserMovies(Tuple2<String, Integer> user, JavaRDD<MovieReview> set){
+		JavaPairRDD<String,MovieReview> generalSet = set.mapToPair(f -> new Tuple2<>(f.getMovie().getProductId(), f));
+		JavaPairRDD<String,MovieReview> userSet = set.filter(f -> f.getUserId().equals(user._1)).mapToPair(f -> new Tuple2<>(f.getMovie().getProductId(), f));
+		return generalSet.subtractByKey(userSet).map(f -> f._2);
+	
 	}
 	
 	
