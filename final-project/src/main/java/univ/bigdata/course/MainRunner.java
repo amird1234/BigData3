@@ -20,8 +20,8 @@ public class MainRunner {
 
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
-    	//    	CommandType query = CommandType.fromString(args[0]);
-    	CommandType query = CommandType.fromString("map");
+    	    	CommandType query = CommandType.fromString(args[0]);
+//    	CommandType query = CommandType.fromString("map");
     	
     	switch (query) {
 		case COMMANDS:
@@ -55,8 +55,8 @@ public class MainRunner {
 			
 			break;
 		case RECOMMEND:
-			//String RecommendationFileName = args[1];
-			String RecommendationFileName = "recommend.txt";
+			String RecommendationFileName = args[1];
+//			String RecommendationFileName = "recommend.txt";
 			
 			
 			try(BufferedReader br = new BufferedReader(new FileReader(RecommendationFileName))) {
@@ -83,8 +83,11 @@ public class MainRunner {
 			
 			
 			//String RecommendationFileName = args[1];
-			String Movies_train = "train80_20.txt";
-			String Movies_test	= "test80_20.txt";
+//			String Movies_train = "train80_20.txt";
+//			String Movies_test	= "test80_20.txt";
+			
+			String Movies_train = args[1];
+			String Movies_test	= args[2];
 			
 			
 //			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
@@ -109,9 +112,9 @@ public class MainRunner {
 			
 		case PAGE_RANK:
 
-//			String movieSimpleFile = args[1];
+			String movieSimpleFile = args[1];
 			
-			String movieSimpleFile = "movies-simple.txt";
+//			String movieSimpleFile = "movies-simple.txt";
 	    	//initialize movie storage and spark context
 	    	moviesStorage = new MoviesStorage(movieSimpleFile);
 	    	
