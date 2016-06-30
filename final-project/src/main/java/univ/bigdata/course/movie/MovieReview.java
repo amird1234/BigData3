@@ -6,8 +6,9 @@ Amir dahan; Amird1234@gmail.com; 039593801
 */
 package univ.bigdata.course.movie;
 
-import java.io.Serializable;
 import java.util.Date;
+
+import scala.Serializable;
 
 public class MovieReview implements Serializable{
 

@@ -9,23 +9,23 @@ import org.apache.spark.api.java.*;
 import org.apache.spark.*;
 
 import univ.bigdata.course.movie.Movie;
+import univ.bigdata.course.compare.compareClass;
 import univ.bigdata.course.movie.MovieReview;
+import univ.bigdata.course.movie.User;
 import univ.bigdata.course.providers.MoviesProvider;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.api.java.function.PairFunction;
 
-import scala.Enumeration.Val;
+import comparators.MovieScoreComparator;
+import scala.Serializable;
 import scala.Tuple2;
-import scala.collection.mutable.LinkedHashMap;
 
 /**
  * Main class which capable to keep all information regarding movies review.
@@ -40,7 +40,7 @@ import scala.collection.mutable.LinkedHashMap;
  * 6. Word count for movie review, select top "K" words
  * 7. K most helpful users
  */
-public class MoviesStorage implements IMoviesStorage {
+public class MoviesStorage implements IMoviesStorage,Serializable {
 	MoviesProvider localProvider;
 	JavaRDD<MovieReview> movieReviews;
 	JavaSparkContext sc;
@@ -67,118 +67,95 @@ public class MoviesStorage implements IMoviesStorage {
     	
     	Average =  moviesScore.reduce((x1,x2) -> x1+x2);
     	return Math.round((Average/moviesScore.count())*100000)/100000.0d;
-		//throw new UnsupportedOperationException("You have to implement this method on your own.");
 	}
 
     @Override
     public double totalMovieAverage(String productId) {
-    	JavaRDD<MovieReview> movies = movieReviews.filter(movie -> movie.getMovie().getProductId().contains(productId));
-        JavaRDD<Double> score = movies.map(movie -> movie.getMovie().getScore());
-        double Average = score.reduce((x1,x2) -> x1+x2);
-        return Math.round((Average/score.count())*100000)/100000.0d;
-    	//throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	JavaRDD<Double> movies = movieReviews.filter(movie -> movie.getMovie().getProductId().contains(productId)).map(movie -> movie.getMovie().getScore());
+    	if(movies.isEmpty()){
+    		return 0;
+    	}
+        double Average = movies.reduce((x1,x2) -> x1+x2);
+        return Math.round((Average/movies.count())*100000)/100000.0d;
     }
 
     @Override
     public List<Movie> getTopKMoviesAverage(long topK) {
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	JavaPairRDD<Movie,Double> list = movieReviews.mapToPair(s->new Tuple2<>(s.getMovie().getProductId(), new Tuple2<>(s.getMovie().getScore(),1)))
+            	.reduceByKey((x1, x2)-> new Tuple2<>(x1._1 + x2._1, x1._2 + x2._2)).map(s -> new Movie(s._1, (s._2._1 / s._2._2))).mapToPair(s->new Tuple2<>(s, s.getScore())).sortByKey();
+
+    	return list.map(s -> new Movie(s._1.getProductId(),s._2 )).top((int)topK);
     }
 
     @Override
     public Movie movieWithHighestAverage() {
     	return getTopKMoviesAverage(1).get(0);
-    	//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
     @Override
     public String mostReviewedProduct() {
-    	/*
-    	Map<String,Long> temp = reviewCountPerMovieTopKMovies(1);
-		if(!temp.isEmpty())
-		{
-			Map.Entry<String,Long> entry=temp.entrySet().iterator().next();
-			return entry.getKey();
-		}
-		else
-			return null;
-    	 */
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+    	 Map<String,Long> temp = reviewCountPerMovieTopKMovies(1);
+    		if(!temp.isEmpty())
+    		{
+    			Map.Entry<String,Long> entry=temp.entrySet().iterator().next();
+    			return entry.getKey();
+    		}
+    		else
+    			return null;
     }
 
-    @Override
+    
+	@Override
     public Map<String, Long> reviewCountPerMovieTopKMovies(int topK) {
-    	/*
     	if(topK < 0)
         	throw new RuntimeException();
     		
-    	Map<String,Long> reviewCount = movieReviews.mapToPair(s -> new Tuple2<>(s.getMovie().getProductId(), 1))
-                    .reduceByKey((a, b) -> a + b).filter(s -> s._2 >= topK);
-    				
-    	List<Movie> sortedList = new ArrayList<>();
-    	for (Map.Entry<String, Long> entry : reviewCount.entrySet())
-    	{
-    		Movie m = new Movie(entry.getKey(),entry.getValue());
-    		sortedList.add(m);
-    	}
-    	sortedList.sort(new MovieScoreComparator());
-    	
-    	reviewCount.clear();
-    	for (Movie m : sortedList) reviewCount.put(m.getProductId(), (long)m.getScore());
-    	return reviewCount;
-    	 */
-    	throw new UnsupportedOperationException("You have to implement this method on your own."); 
+    	JavaPairRDD<compareClass, Long> tempReviewCount = movieReviews.mapToPair(s -> new Tuple2<>(s.getMovie().getProductId(),Long.valueOf(1)))
+                    .reduceByKey((a, b) -> a + b).map(s -> new compareClass(s._2, s._1)).mapToPair(s->new Tuple2<>(s, s.getFirstKey())).sortByKey();;
+        Map<String, Long> ret= new java.util.LinkedHashMap<String,Long>() ;
+        tempReviewCount.take((int)topK).forEach(item->ret.put(item._1.getSecoundKey(),item._2));
+        return ret;
     }
 
     @Override
     public String mostPopularMovieReviewedByKUsers(int numOfUsers) {
-    	/*
     	if(numOfUsers < 0)
-			throw new RuntimeException();
-	
-		List<Movie> popularMovie =  movieReviews
-            .mapToPair(s-> new Tuple2<>(s.getMovie().getProductId(), new Tuple2<>(s.getMovie().getScore(), 1)))
-            .reduceByKey((a, b)-> new Tuple2<>(a._1 + b._1, a._2 + b._2))
-            .filter(s -> s._2._2 >= numOfUsers).map(s -> new Movie(s._1, s._2._1));
-	
-		if(!popularMovie.isEmpty())
-		{
-			popularMovie.sort(new MovieScoreComparator());
-			return popularMovie.get(0).getProductId();
-		}
-		else
-		{
-			return null;
-		}
-    	 */
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+    		throw new RuntimeException();
+    	
+    	List<Movie> popularMovie =  movieReviews
+                .mapToPair(s-> new Tuple2<>(s.getMovie().getProductId(), new Tuple2<>(s.getMovie().getScore(), 1)))
+                .reduceByKey((x1, x2)-> new Tuple2<>(x1._1 + x2._1, x1._2 + x2._2))
+                .filter(s -> s._2._2 >= numOfUsers).map(s -> new Movie(s._1, s._2._1)).collect();
+    	
+    	if(!popularMovie.isEmpty())
+    	{
+    		popularMovie.sort(new MovieScoreComparator());
+    		return popularMovie.get(0).getProductId();
+    	}
+    	else
+    	{
+    		return null;
+    	}
     }
 
    
 	@Override
     public Map<String, Long> moviesReviewWordsCount(int topK) {
+		
 		return topYMoviewsReviewTopXWordsCount((int)moviesCount(),topK);
-		//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
     
     @Override
     public Map<String, Long> topYMoviewsReviewTopXWordsCount(int topMovies, int topWords) {
     	Map<String,Long> topYMovies = reviewCountPerMovieTopKMovies(topMovies);
-    	Map<String,Long> wordCount;
-    	JavaRDD<String> input = movieReviews.filter(s-> topYMovies.containsKey(s.getMovie().getProductId())).mapToPair(s->new Tuple2<>(s.getMovie(), s.getReview())).distinct().values();
-    	JavaRDD<String> words =input.flatMap(
-    		      new FlatMapFunction<String, String>() {
-    		          public Iterable<String> call(String x) {
-    		            return Arrays.asList(x.split(" "));
-    		          }});
-    	JavaPairRDD<String, Integer> counts = words.mapToPair(
-    		      new PairFunction<String, String, Integer>(){
-    		        public Tuple2<String, Integer> call(String x){
-    		          return new Tuple2(x, 1);
-    		        }}).reduceByKey(new Function2<Integer, Integer, Integer>(){
-    		            public Integer call(Integer x, Integer y){ return x + y;}});
-    	wordCount =(Map<String, Long>) counts;
-        return wordCount;
-    	//return topYMoviewsReviewTopXWordsCountLong((long)topMovies, topWords);
+    	//top k movies and their reviews
+    	JavaPairRDD<compareClass,Long> count = movieReviews.filter(s-> topYMovies.containsKey(s.getMovie().getProductId()))
+    			.map(s-> s.getReview()).flatMap(s-> Arrays.asList(s.split(" "))).mapToPair(s->new Tuple2<>(s, Long.valueOf(1)))
+    			.reduceByKey((x1,x2)->x1+x2).map(s->new compareClass(s._2,s._1)).mapToPair(s->new Tuple2<>(s, s.getFirstKey())).sortByKey();
+    	
+        Map<String, Long> ret= new java.util.LinkedHashMap<String,Long>() ;
+        count.take((int)topWords).forEach(item->ret.put(item._1.getSecoundKey(),item._2));
+        return ret;
     }
 
     @Override
@@ -198,30 +175,28 @@ public class MoviesStorage implements IMoviesStorage {
      * @return
      */
     public Map<String, Double> topKHelpfullUsers(int k) {
-    	/*
-    	if(k < 0)
-    		throw new RuntimeException();
+        if(k < 0)
+        	throw new RuntimeException();
 
-    	Map<String, Double> topKHelpfullUsersRetVal = new LinkedHashMap<String, Double>();
-    	List<User> usersList = movieReviews
-                .mapToPair(a -> new Tuple2<>(a.getUserId(), a.getHelpfulness()))
-                .mapToPair(s -> new Tuple2<>(s._1, new Tuple2<>(Double.parseDouble(s._2.substring(0,s._2.lastIndexOf('/'))),
-                        Double.parseDouble(s._2.substring(s._2.lastIndexOf('/') + 1, s._2.length())))))
-                .filter(s -> s._2._2 != 0)
-                .reduceByKey((a,b) -> new Tuple2<>(a._1 + b._1, a._2 + b._2))
-                .map(s -> new User(s._1, s._2._1/s._2._2));
+        Map<String, Double> ret = new HashMap<String, Double>();
+        JavaPairRDD<User,Double> usersHelpful =  movieReviews
+                    .mapToPair(a -> new Tuple2<>(a.getUserId(), a.getHelpfulness()))
+                    .mapToPair(s -> new Tuple2<>(s._1, new Tuple2<>(Double.parseDouble(s._2.substring(0,s._2.lastIndexOf('/'))),
+                            Double.parseDouble(s._2.substring(s._2.lastIndexOf('/') + 1, s._2.length())))))
+                    .filter(s -> s._2._2 != 0)
+                    .reduceByKey((a,b) -> new Tuple2<>(a._1 + b._1, a._2 + b._2))
+                    .map(s -> new User(s._1, s._2._1/s._2._2)).mapToPair(s-> new Tuple2<>(s, s.getHelpfullness())).sortByKey();
 
-    	// reduce list to only top K reviewers
-    	usersList = usersList.subList(0, java.lang.Math.min(k, usersList.size()));
+        // reduce list to only top K reviewers
+         usersHelpful.take(k).forEach(item->ret.put(item._1.getUserID(),item._1.getHelpfullness()));
+         return ret;
+        // translate List into a Map
+   /*     for (User user : usersList) {
+        	topKHelpfullUsersRetVal.put(user.getUserID(), user.getHelpfullness());
+        }
 
-    	// translate List into a Map
-    	for (User user : usersList) {
-    		topKHelpfullUsersRetVal.put(user.getUserID(), user.getHelpfullness());
-    	}
-
-    	return topKHelpfullUsersRetVal;
-    	 */
-    	throw new UnsupportedOperationException("You have to implement this method on your own.");
+        return topKHelpfullUsersRetVal;*/
+    	//throw new UnsupportedOperationException("You have to implement this method on your own.");
     }
 
     @Override
@@ -229,7 +204,6 @@ public class MoviesStorage implements IMoviesStorage {
 		JavaRDD<String> moviesRDD = movieReviews.map(movie -> movie.getMovie().getProductId()).distinct();
 		return moviesRDD.count();
     }
-    
     public void closeJavaSparkContext(){
     	sc.close();
     }
@@ -311,8 +285,11 @@ public class MoviesStorage implements IMoviesStorage {
     	//users and movies list
     	JavaPairRDD<String, String> UsersMovies = movieReviews.mapToPair(s->new Tuple2<>(s.getMovie().getProductId(), s.getUserId())).distinct();
     	//user and user list
-        JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))<0)).map(s->s._2._1 + " " + s._2._2).distinct();
+    	JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))!=0)).map(s->s._2._1 + " " + s._2._2).distinct();
+    	return UserUser;
+        /*JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))<0)).map(s->s._2._1 + " " + s._2._2).distinct();
         JavaRDD<String> UserUser2 = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))>0)).map(s->s._2._2 + " " + s._2._1).distinct();
-        return UserUser.union(UserUser2).distinct();
+        return UserUser.union(UserUser2).distinct();*/
     }
+
 }

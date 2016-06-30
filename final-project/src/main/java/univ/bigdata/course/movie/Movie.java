@@ -6,9 +6,11 @@ Amir dahan; Amird1234@gmail.com; 039593801
 */
 package univ.bigdata.course.movie;
 
-import java.io.Serializable;
+import java.util.Comparator;
 
-public class Movie implements Serializable{
+import scala.Serializable;
+
+public class Movie implements Serializable, Comparable<Movie>{
 
     private String productId;
 
@@ -45,6 +47,38 @@ public class Movie implements Serializable{
                 ", score=" + score +
                 '}';
     }
-    
+    @Override
+    public int compareTo(Movie other){
+        double diff = this.getScore()- other.getScore();
+        int res;
+        if (diff > 0){
+        	res = -1;
+        }else {
+        	if (diff < 0){
+        		res = 1;
+        	}else{
+        		res = 0;
+        	}
+        }
+        return res == 0 ? this.getProductId().compareTo(other.getProductId()) : res;
+    	
+    }
+    public static Comparator<Movie> FruitNameComparator 
+    = new Comparator<Movie>() {
+
+	public int compare(Movie movie1, Movie movie2) {
+		double comp = movie1.getScore() - movie2.getScore();
+		if(comp == 0){
+			return movie1.getProductId().compareTo(movie2.getProductId());
+		}else {
+			if (comp >0){
+				return 1;
+			}else {
+				return -1;
+			}
+		}
+	}
+
+};
 
 }

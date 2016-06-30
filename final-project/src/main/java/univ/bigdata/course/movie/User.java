@@ -9,20 +9,20 @@ package univ.bigdata.course.movie;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.spark.mllib.recommendation.Rating;
 
 import comparators.RecommandtionComperator;
+import scala.Serializable;
 import scala.Tuple2;
 
-public class User {
+public class User implements Serializable,Comparable<User>{
 	String userID;
 	Integer numerator, denominator;
 	Double helpfulness;
 	Integer numOfReviews;
 	Boolean helpFull = false;
-	List<Tuple2<Double, String>> recommendations;
+	ArrayList<Tuple2<Double, String>> recommendations;
 
 	public User(String userID, Integer numerator, Integer denominator, Integer numOfReviews) {
 		super();
@@ -35,16 +35,19 @@ public class User {
 		this.calcHelpfulness();
 	}
 	
-	public User(String userID, List<Tuple2<Double, String>> Recommendations){
+	public User(String userID, ArrayList<Tuple2<Double, String>> Recommendations){
 		this.userID = userID;
 		this.recommendations = Recommendations;
-//		this.recommendations.sort(new RecommandtionComperator());
+		this.recommendations.sort(new RecommandtionComperator());
 	}
 
 	public User(String string, Rating[] _2) {
 		userID = string;
 	}
-
+	public User(String userID, Double helpfulness){
+		this.userID = userID;
+		this.helpfulness = helpfulness;
+	}
 	private Double round(Double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
 
@@ -90,14 +93,27 @@ public class User {
 	}
 	
 	public String printRecommendations(){
-		int i=1;
 		String recString = "Recommendations for " + userID + ":\n";
 		for(Tuple2<Double, String> recommand : recommendations){
-			recString += i + ". " + recommand._2 + " Score:" + recommand._1 + "\n";
-			i++;
+			recString += recommand._2 + "Score:" + recommand._1;
 		}
-		recString += "======================================";
 		
 		return recString;
 	}
+    @Override
+    public int compareTo(User other){
+        double diff = this.getHelpfullness()- other.getHelpfullness();
+        int res;
+        if (diff > 0){
+        	res = -1;
+        }else {
+        	if (diff < 0){
+        		res = 1;
+        	}else{
+        		res = 0;
+        	}
+        }
+        return res == 0 ? this.getUserID().compareTo(other.getUserID()) : res;
+    	
+    }
 }
