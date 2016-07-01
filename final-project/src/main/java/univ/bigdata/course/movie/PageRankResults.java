@@ -1,6 +1,11 @@
 package univ.bigdata.course.movie;
 
 
+import java.math.BigDecimal;
+
+import org.apache.commons.math3.util.Precision;
+import org.apache.spark.sql.catalyst.expressions.Round;
+
 import scala.Serializable;
 
 /**
@@ -22,7 +27,7 @@ public class PageRankResults implements  Serializable {
     public String toString() {
         return "pageRankResults{" +
                 "UserId='" + id + '\'' +
-                ", PageRank=" + score +
+                ", PageRank=" + Precision.round(score, 5, BigDecimal.ROUND_HALF_UP) +
                 '}';
     }
 

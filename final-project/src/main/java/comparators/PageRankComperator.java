@@ -11,9 +11,9 @@ public class PageRankComperator implements Comparator<PageRankResults>, Serializ
 	@Override
 	public int compare(PageRankResults o1, PageRankResults o2) {
 		if(o1.score == o2.score){
-			return o1.id.compareTo(o2.id);
+			return o2.id.compareTo(o1.id);
 		}else{
-			return o1.score.compareTo(o2.score);
+			return o2.score.compareTo(o1.score);
 		}
 	}
 

@@ -20,8 +20,8 @@ public class MainRunner {
 
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
-    	    	CommandType query = CommandType.fromString(args[0]);
-//    	CommandType query = CommandType.fromString("recommend");
+//    	    	CommandType query = CommandType.fromString(args[0]);
+    	CommandType query = CommandType.fromString("pagerank");
     	
     	switch (query) {
 		case COMMANDS:
@@ -82,7 +82,6 @@ public class MainRunner {
 		case MAP_COMMAND:
 			
 			
-			//String RecommendationFileName = args[1];
 //			String Movies_train = "train80_20.txt";
 //			String Movies_test	= "test80_20.txt";
 			
@@ -91,9 +90,8 @@ public class MainRunner {
 			
 			MovieRecommands mr = null;
 			
-//			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
 			    try{
-//			    PrintStream printer  = new PrintStream (new File(outputPath));
+
 			    
 		    	//initialize movie storage and spark context
 		    	mr = new MovieRecommands(Movies_train,Movies_test);
@@ -128,7 +126,7 @@ public class MainRunner {
 				modifiablePRresults.sort(new PageRankComperator());
 				
 				if(modifiablePRresults.size() > 100){
-					modifiablePRresults = modifiablePRresults.subList(0, 99);
+					modifiablePRresults = modifiablePRresults.subList(0, 100);
 				}
 				for(PageRankResults prr : modifiablePRresults){
 					System.out.println(prr.toString());
