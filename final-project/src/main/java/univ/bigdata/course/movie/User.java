@@ -98,7 +98,7 @@ public class User implements Serializable,Comparable<User>{
 		Integer i= 1;
 		String recString = "Recommendations for " + userID + ":\n";
 		for(Tuple2<Double, String> recommand : recommendations){
-			recString += i + ". " + recommand._2 + " Score:" + recommand._1 + "\n";
+			recString += i + ". " + recommand._2 +  "\n";
 			i++;
 		}
 		recString += "======================================";
