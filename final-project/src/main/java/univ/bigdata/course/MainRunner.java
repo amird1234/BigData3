@@ -20,8 +20,8 @@ public class MainRunner {
 
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
-//    	    	CommandType query = CommandType.fromString(args[0]);
-    	CommandType query = CommandType.fromString("recommend");
+    	    	CommandType query = CommandType.fromString(args[0]);
+//    	CommandType query = CommandType.fromString("recommend");
     	
     	switch (query) {
 		case COMMANDS:
@@ -55,8 +55,8 @@ public class MainRunner {
 			
 			break;
 		case RECOMMEND:
-//			String RecommendationFileName = args[1];
-			String RecommendationFileName = "recommend.txt";
+			String RecommendationFileName = args[1];
+//			String RecommendationFileName = "recommend.txt";
 			
 			
 			try(BufferedReader br = new BufferedReader(new FileReader(RecommendationFileName))) {

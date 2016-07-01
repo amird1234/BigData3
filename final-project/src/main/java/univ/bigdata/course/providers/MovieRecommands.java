@@ -48,7 +48,7 @@ public class MovieRecommands {
 	public MovieRecommands(String traningFile){
 		
 		//creating the Spark context
-        SparkConf conf = new SparkConf().setAppName("mySparkApp").setMaster("local");
+        SparkConf conf = new SparkConf().setAppName("mySparkApp");//.setMaster("local");
         sc = new JavaSparkContext(conf);
         JavaRDD<String> fileLines = sc.textFile(traningFile);
         MovsReviws = fileLines.map(MovieReview::new);
