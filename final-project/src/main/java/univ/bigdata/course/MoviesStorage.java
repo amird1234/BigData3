@@ -282,14 +282,11 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 		}
     }
     public  JavaRDD<String> getPairedUser(){
-    	//users and movies list
-    	JavaPairRDD<String, String> UsersMovies = movieReviews.mapToPair(s->new Tuple2<>(s.getMovie().getProductId(), s.getUserId())).distinct();
-    	//user and user list
-    	JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))!=0)).map(s->s._2._1 + " " + s._2._2).distinct();
-    	return UserUser;
-        /*JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))<0)).map(s->s._2._1 + " " + s._2._2).distinct();
-        JavaRDD<String> UserUser2 = UsersMovies.join(UsersMovies).filter(s->((s._2._1.compareTo(s._2._2))>0)).map(s->s._2._2 + " " + s._2._1).distinct();
-        return UserUser.union(UserUser2).distinct();*/
+        	//users and movies list
+        	JavaPairRDD<String, String> UsersMovies = movieReviews.mapToPair(s->new Tuple2<>(s.getMovie().getProductId(), s.getUserId())).distinct();
+        	//user and user list
+            JavaRDD<String> UserUser = UsersMovies.join(UsersMovies).filter(s->(!s._2._1.equals(s._2._2))).map(s->s._2._1 + " " + s._2._2).distinct();
+        	return UserUser;
     }
 
 }

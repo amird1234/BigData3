@@ -20,8 +20,8 @@ public class MainRunner {
 
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
-    	    	CommandType query = CommandType.fromString(args[0]);
-//    	CommandType query = CommandType.fromString("map");
+//    	    	CommandType query = CommandType.fromString(args[0]);
+    	CommandType query = CommandType.fromString("recommend");
     	
     	switch (query) {
 		case COMMANDS:
@@ -55,8 +55,8 @@ public class MainRunner {
 			
 			break;
 		case RECOMMEND:
-			String RecommendationFileName = args[1];
-//			String RecommendationFileName = "recommend.txt";
+//			String RecommendationFileName = args[1];
+			String RecommendationFileName = "recommend.txt";
 			
 			
 			try(BufferedReader br = new BufferedReader(new FileReader(RecommendationFileName))) {
@@ -89,21 +89,22 @@ public class MainRunner {
 			String Movies_train = args[1];
 			String Movies_test	= args[2];
 			
+			MovieRecommands mr = null;
 			
 //			try(BufferedReader br = new BufferedReader(new FileReader(Movies_train))) {
 			    try{
 //			    PrintStream printer  = new PrintStream (new File(outputPath));
 			    
 		    	//initialize movie storage and spark context
-		    	MovieRecommands mr = new MovieRecommands(Movies_train,Movies_test);
-//		    	mr.recommend(Movies_train);//.forEach(a->.println(a.printRecommendations()));
+		    	mr = new MovieRecommands(Movies_train,Movies_test);
 		    	Double ans = mr.getMAPValue();
+		    	System.out.println("MAP Value is" + ans);
 			}catch (Exception e) {
 				e.printStackTrace();
 				throw new IllegalArgumentException("Program Second argument is illegal.");
 			}finally {
-				if(moviesStorage != null){
-					moviesStorage.closeJavaSparkContext();
+				if(mr != null){
+					mr.close();
 				}
 			} 
 			
@@ -129,6 +130,10 @@ public class MainRunner {
 				if(modifiablePRresults.size() > 100){
 					modifiablePRresults = modifiablePRresults.subList(0, 99);
 				}
+				for(PageRankResults prr : modifiablePRresults){
+					System.out.println(prr.toString());
+				}
+				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -42,13 +42,13 @@ public class MovieRecommands {
 	JavaPairRDD<String, Integer> usersIndexed;
 	Double MAPSum = 0.0;
 	Double MAPCounter = 0.0;
-	Double MAPValue;
+	Double MAPValue = 0.0;
 	
 	//constructor for movie recommendations
 	public MovieRecommands(String traningFile){
 		
 		//creating the Spark context
-        SparkConf conf = new SparkConf().setAppName("mySparkApp");
+        SparkConf conf = new SparkConf().setAppName("mySparkApp").setMaster("local");
         sc = new JavaSparkContext(conf);
         JavaRDD<String> fileLines = sc.textFile(traningFile);
         MovsReviws = fileLines.map(MovieReview::new);
@@ -159,11 +159,17 @@ public class MovieRecommands {
 				//((uid,pid),(recommendIndexZip,testSetIndex))
 				.mapToPair(f -> new Tuple2<>(new Tuple2<>(f._1._1._1,f._1._1._2),new Tuple2<>(f._1._2._1,toIntExact(f._2))));
 		    
-				//8) after we have this 4-tuple we can calculate independently.
-				MAPSum += (finalRDD.mapToDouble(f -> (f._2._2 / f._2._1))).sum()/finalRDD.count();
-				MAPCounter++;
+				
+				//8) after we have this 4-tuple we can calculate independently ( the +1 is because ZipWithIndex starts with index 0).
+				Double tempCount = ((Long)finalRDD.count()).doubleValue();
+				if(tempCount > 0.0){
+					MAPSum += (finalRDD.mapToDouble(f -> ((f._2._2 + 1) / (f._2._1 + 1)))).sum()/finalRDD.count();
+					MAPCounter++;
+				}
 		    }
-		    MAPValue = MAPSum/MAPCounter;		
+		    if(MAPCounter != 0.0){
+		    	MAPValue = MAPSum/MAPCounter;
+		    }
 		}
         
 	}
@@ -199,8 +205,8 @@ public class MovieRecommands {
 			    	.join(moviesIndexed.mapToPair(movie -> new Tuple2<>(movie._2, movie._1)))
 			    	//(
 			    	.mapToPair(f -> new Tuple2<>(f._2._1, f._2._2));
-			    	ArrayList<Tuple2<Double, String>> recommendations;
-			    	recommendations = (ArrayList<Tuple2<Double, String>>) currentUserPredicts.takeOrdered(10,new RecommandtionComperator());
+			    	List<Tuple2<Double, String>> recommendations;
+			    	recommendations =  currentUserPredicts.takeOrdered(10,new RecommandtionComperator());
 
 			    	UserRecs.add(new User(currentuser._1,recommendations));
 			    }
@@ -220,6 +226,10 @@ public class MovieRecommands {
 		JavaPairRDD<String,MovieReview> userSet = set.filter(f -> f.getUserId().equals(user._1)).mapToPair(f -> new Tuple2<>(f.getMovie().getProductId(), f));
 		return generalSet.subtractByKey(userSet).map(f -> f._2);
 	
+	}
+	
+	public void close(){
+		this.sc.close();
 	}
 	
 	

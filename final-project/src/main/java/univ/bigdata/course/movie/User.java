@@ -9,6 +9,7 @@ package univ.bigdata.course.movie;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.spark.mllib.recommendation.Rating;
 
@@ -22,7 +23,7 @@ public class User implements Serializable,Comparable<User>{
 	Double helpfulness;
 	Integer numOfReviews;
 	Boolean helpFull = false;
-	ArrayList<Tuple2<Double, String>> recommendations;
+	List<Tuple2<Double, String>> recommendations;
 
 	public User(String userID, Integer numerator, Integer denominator, Integer numOfReviews) {
 		super();
@@ -35,9 +36,10 @@ public class User implements Serializable,Comparable<User>{
 		this.calcHelpfulness();
 	}
 	
-	public User(String userID, ArrayList<Tuple2<Double, String>> Recommendations){
+	public User(String userID, List<Tuple2<Double, String>> Recommendations){
 		this.userID = userID;
-		this.recommendations = Recommendations;
+		this.recommendations = new ArrayList<>(Recommendations);
+//				Recommendations;
 		this.recommendations.sort(new RecommandtionComperator());
 	}
 
@@ -93,10 +95,13 @@ public class User implements Serializable,Comparable<User>{
 	}
 	
 	public String printRecommendations(){
+		Integer i= 1;
 		String recString = "Recommendations for " + userID + ":\n";
 		for(Tuple2<Double, String> recommand : recommendations){
-			recString += recommand._2 + "Score:" + recommand._1;
+			recString += i + ". " + recommand._2 + " Score:" + recommand._1 + "\n";
+			i++;
 		}
+		recString += "======================================";
 		
 		return recString;
 	}
