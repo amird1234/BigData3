@@ -48,7 +48,7 @@ public class MovieRecommands {
 	public MovieRecommands(String traningFile){
 		
 		//creating the Spark context
-        SparkConf conf = new SparkConf().setAppName("mySparkApp").setMaster("local");
+        SparkConf conf = new SparkConf().setAppName("mySparkApp");
         sc = new JavaSparkContext(conf);
         JavaRDD<String> fileLines = sc.textFile(traningFile);
         MovsReviws = fileLines.map(MovieReview::new);
@@ -199,8 +199,8 @@ public class MovieRecommands {
 			    	.join(moviesIndexed.mapToPair(movie -> new Tuple2<>(movie._2, movie._1)))
 			    	//(
 			    	.mapToPair(f -> new Tuple2<>(f._2._1, f._2._2));
-			    	List<Tuple2<Double, String>> recommendations;
-			    	recommendations = currentUserPredicts.takeOrdered(10,new RecommandtionComperator());
+			    	ArrayList<Tuple2<Double, String>> recommendations;
+			    	recommendations = (ArrayList<Tuple2<Double, String>>) currentUserPredicts.takeOrdered(10,new RecommandtionComperator());
 
 			    	UserRecs.add(new User(currentuser._1,recommendations));
 			    }
