@@ -55,7 +55,7 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 	 * @param path - a path to file
 	 */
     public MoviesStorage(String path) {
-		sc = new JavaSparkContext(new SparkConf().setMaster("local").setAppName("mySparkApp"));
+		sc = new JavaSparkContext(new SparkConf().setAppName("groundControl3"));
 		JavaRDD<String> fileLines = sc.textFile(path);
 		movieReviews = fileLines.map(MovieReview::new);
 		
