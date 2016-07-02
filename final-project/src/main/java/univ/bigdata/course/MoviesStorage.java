@@ -295,7 +295,7 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 		case "mostPopularMovieReviewedByKUsers":
 			printer.println("mostPopularMovieReviewedByKUsers " + variables[1]);
 			int K3 = Integer.parseInt(variables[1]);
-			printer.println("Most popular movie with highest average score, reviewed by at least " + variables[1] + "users " + mostPopularMovieReviewedByKUsers(K3));
+			printer.println("Most popular movie with highest average score, reviewed by at least " + variables[1] + " users " + mostPopularMovieReviewedByKUsers(K3));
 			break;
 			
 		case "topYMoviesReviewTopXWordsCount":

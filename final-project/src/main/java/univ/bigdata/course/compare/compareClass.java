@@ -18,19 +18,17 @@ public class compareClass  implements Serializable,Comparable<compareClass>{
 	}
     @Override
     public int compareTo(compareClass other){
-        double diff = this.getFirstKey()- other.getFirstKey();
+        long diff = this.getFirstKey()- other.getFirstKey();
         int res;
         if (diff > 0){
-        	res = -1;
+        	return 1;
         }else {
         	if (diff < 0){
-        		res = 1;
+        		return -1;
         	}else{
-        		res = 0;
+        		return -this.getSecoundKey().compareTo(other.getSecoundKey());
         	}
         }
-        return res == 0 ? this.getSecoundKey().compareTo(other.getSecoundKey()) : res;
-    	
     }
 
 
