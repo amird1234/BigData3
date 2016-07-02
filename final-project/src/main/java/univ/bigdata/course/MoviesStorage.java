@@ -228,27 +228,33 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
     	
     	switch (query) {
 		case "totalMoviesAverageScore":
+			printer.println("totalMoviesAverageScore");
 			printer.println("Total average: " + totalMoviesAverageScore());
 			break;
 			
 		case "totalMovieAverage":
+			printer.println("totalMovieAverage " + variables[1]);
 			printer.println(totalMovieAverage(variables[1]));
 			break;
 			
 		case "getTopKMoviesAverage":
+			printer.println("getTopKMoviesAverage " + variables[1]);
 			long K1 = Long.parseLong(variables[1]);
 			getTopKMoviesAverage(K1).stream().forEach(printer::println);
 			break;
 			
 		case "movieWithHighestAverage":
+			printer.println("movieWithHighestAverage");
 			printer.println("The movie with highest average:  " + movieWithHighestAverage());
 			break;
 			
 		case "mostReviewedProduct":
+			printer.println("mostReviewedProduct");
 			printer.println("The most reviewed movie product id is " + mostReviewedProduct());
 			break;
 			
 		case "reviewCountPerMovieTopKMovies":
+			printer.println("reviewCountPerMovieTopKMovies " + variables[1]);
 			int K2 = Integer.parseInt(variables[1]);
 			reviewCountPerMovieTopKMovies(K2)
             .entrySet()
@@ -257,11 +263,13 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 			break;
 			
 		case "mostPopularMovieReviewedByKUsers":
+			printer.println("mostPopularMovieReviewedByKUsers " + variables[1]);
 			int K3 = Integer.parseInt(variables[1]);
 			printer.println("Most popular movie with highest average score, reviewed by at least " + variables[1] + "users " + mostPopularMovieReviewedByKUsers(K3));
 			break;
 			
-		case "topYMoviewsReviewTopXWordsCount":
+		case "topYMoviesReviewTopXWordsCount":
+			printer.println("topYMoviesReviewTopXWordsCount " + variables[1] + " " + variables[2]);
 			int K4 = Integer.parseInt(variables[1]);
 			int K5 = Integer.parseInt(variables[2]);
 			topYMoviewsReviewTopXWordsCount(K4, K5)
@@ -270,6 +278,7 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 			break;
 			
 		case "topKHelpfullUsers":
+			printer.println("topKHelpfullUsers " + variables[1]);
 			int K6 = Integer.parseInt(variables[1]);
 			topKHelpfullUsers(K6)
             .entrySet()
@@ -277,8 +286,17 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 			break;
 			
 		case "moviesCount":
+			printer.println("moviesCount");
 			printer.println("Total number of distinct movies reviewed [" + moviesCount()+ "].");
 			break;
+			
+		case "moviesReviewWordsCount":
+			printer.println("moviesReviewWordsCount " + variables[1]);
+			int K7 = Integer.parseInt(variables[1]);
+			moviesReviewWordsCount(K7)
+            .entrySet()
+            .forEach(pair -> printer.println("Word = [" + pair.getKey() + "], number of occurrences [" + pair.getValue() + "]."));
+			break;			
 		default:
 			break;
 		}

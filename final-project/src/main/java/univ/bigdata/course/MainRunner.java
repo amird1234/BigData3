@@ -20,8 +20,7 @@ public class MainRunner {
 
     public static void main(String[] args) {
     	MoviesStorage moviesStorage = null;
-//    	    	CommandType query = CommandType.fromString(args[0]);
-    	CommandType query = CommandType.fromString("pagerank");
+    	    	CommandType query = CommandType.fromString(args[0]);
     	
     	switch (query) {
 		case COMMANDS:
