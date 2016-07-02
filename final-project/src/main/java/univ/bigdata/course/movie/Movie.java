@@ -52,10 +52,10 @@ public class Movie implements Serializable, Comparable<Movie>{
         double diff = this.getScore()- other.getScore();
         int res;
         if (diff > 0){
-        	res = 1;
+        	res = -1;
         }else {
         	if (diff < 0){
-        		res = -1;
+        		res = 1;
         	}else{
         		res = 0;
         	}

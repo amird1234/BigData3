@@ -6,6 +6,8 @@ Amir dahan; Amird1234@gmail.com; 039593801
 */
 package univ.bigdata.course;
 
+import univ.bigdata.course.compare.compareClass;
+import univ.bigdata.course.compare.compareD;
 import univ.bigdata.course.movie.Movie;
 
 import java.util.List;
@@ -60,7 +62,7 @@ public interface IMoviesStorage {
      *
      * @return - returns map with movies product id and the count of over all reviews assigned to it.
      */
-    Map<String, Long> reviewCountPerMovieTopKMovies(final int topK);
+    List<compareClass> reviewCountPerMovieTopKMovies(final int topK);
 
     /**
      * Computes most popular movie which has been reviewed by at least
@@ -78,7 +80,7 @@ public interface IMoviesStorage {
      * @return - map where key is the word and value is the number of occurrences
      * of this word in the reviews summary, map ordered by words count in decreasing order.
      */
-    Map<String, Long> moviesReviewWordsCount(final int topK);
+    List<compareClass> moviesReviewWordsCount(final int topK);
 
     /**
      * Compute words count map for top Y most reviewed movies. Map includes top K
@@ -88,7 +90,7 @@ public interface IMoviesStorage {
      * @param topWords - number of top words to return
      * @return - map of words to count, ordered by count in decreasing order.
      */
-    Map<String, Long> topYMoviewsReviewTopXWordsCount(final int topMovies, final int topWords);
+    List<compareClass> topYMoviewsReviewTopXWordsCount(final int topMovies, final int topWords);
 
     /**
      * Compute top k most helpful users that provided reviews for movies
@@ -97,7 +99,7 @@ public interface IMoviesStorage {
      * @return - map of users to number of reviews they made. Map ordered by number of reviews
      * in decreasing order.
      */
-    Map<String, Double> topKHelpfullUsers(final int k);
+    List<compareD> topKHelpfullUsers(final int k);
 
     /**
      * Total movies count

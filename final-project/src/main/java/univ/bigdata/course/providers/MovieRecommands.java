@@ -81,19 +81,17 @@ public class MovieRecommands {
 	
 	//Constructor for Movie MAP
 	/**
-	 *algorithm (the way i see it)
+	 *algorithm 
 	 *
-	 * 1) create a (user,movie) tuples from predict (i assume movies in rdd arrived sorted...)
+	 * 1) create a (user,movie) tuples from predict 
 	 * 2) give an index TO tuple - i saw recommendations online to use zipwithindex (gives an ordered index for all movies)
 	 * 3) in the "map" of "2" we should map tuple to ((user, movie), index) -> No Need, done automatically in "2"
 	 * 4) get all movies from test set (besides score<3.0)
 	 * 5) join with map function that maps only if user & movie match.
 	 * 6) calculate MAP: after join we should index result (again using some indexing method - maybe zipwithindex) 
 	 * 7) now we have (user, movie, iredictIndex, testSetIndex) - relative index is 1,2,3,4... index is 1,3,5,,8,11 etc
-	 * 8) after we have this 4-tuple we can calculate independently (just like we did in my NotePad++ and we don't care about 
-	 * 	  doing it on 10000000 computers, it is just a map, sum and division 
+	 * 8) after we have this 4-tuple we can calculate independently 
 	 * 
-	 * in general i just documented, didn't do anything crucial 
 	 * @param traningFile
 	 * @param testFile
 	 */
@@ -123,7 +121,7 @@ public class MovieRecommands {
 		    	counter++;
 		    	//1) create a (user,movie) tuples from predict sorted by rating
 		    	//(MovieReview)
-		    	JavaPairRDD<String, String> currentUserPredicts = model.predict(MovsReviws.filter(review -> !review.getUserId().equals(currentuser._1))
+		    	JavaPairRDD<String, String> currentUserPredicts = model.predict(getReleventUserMovies(currentuser,MovsReviws)
 		    			//(pid,score)
 		    			.mapToPair(review -> new Tuple2<>(review.getMovie().getProductId(), null))
 		    			//(pidS,null)
