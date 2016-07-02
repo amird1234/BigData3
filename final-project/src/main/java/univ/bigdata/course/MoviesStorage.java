@@ -17,6 +17,7 @@ import univ.bigdata.course.providers.MoviesProvider;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +67,7 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
     	JavaRDD<Double> moviesScore = movieReviews.map(movie -> movie.getMovie().getScore());
     	
     	Average =  moviesScore.reduce((x1,x2) -> x1+x2);
-    	return Math.round((Average/moviesScore.count())*100000)/100000.0d;
+    	return Double.parseDouble(new DecimalFormat("##.#####").format(Average/moviesScore.count()));
 	}
 
     @Override
@@ -76,13 +77,13 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
     		return 0;
     	}
         double Average = movies.reduce((x1,x2) -> x1+x2);
-        return Math.round((Average/movies.count())*100000)/100000.0d;
+        return Double.parseDouble(new DecimalFormat("##.#####").format(Average/movies.count()));
     }
 
     @Override
     public List<Movie> getTopKMoviesAverage(long topK) {
     	JavaPairRDD<Movie,Double> list = movieReviews.mapToPair(s->new Tuple2<>(s.getMovie().getProductId(), new Tuple2<>(s.getMovie().getScore(),1)))
-            	.reduceByKey((x1, x2)-> new Tuple2<>(x1._1 + x2._1, x1._2 + x2._2)).map(s -> new Movie(s._1, (s._2._1 / s._2._2))).mapToPair(s->new Tuple2<>(s, s.getScore())).sortByKey();
+            	.reduceByKey((x1, x2)-> new Tuple2<>(x1._1 + x2._1, x1._2 + x2._2)).map(s -> new Movie(s._1, Double.parseDouble(new DecimalFormat("##.#####").format(s._2._1 / s._2._2)))).mapToPair(s->new Tuple2<>(s, s.getScore())).sortByKey();
 
     	return list.map(s -> new Movie(s._1.getProductId(),s._2 )).top((int)topK);
     }
@@ -111,7 +112,7 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
         	throw new RuntimeException();
     		
     	JavaPairRDD<compareClass, Long> tempReviewCount = movieReviews.mapToPair(s -> new Tuple2<>(s.getMovie().getProductId(),Long.valueOf(1)))
-                    .reduceByKey((a, b) -> a + b).map(s -> new compareClass(s._2, s._1)).mapToPair(s->new Tuple2<>(s, s.getFirstKey())).sortByKey();;
+                    .reduceByKey((a, b) -> a + b).map(s -> new compareClass(s._2, s._1)).mapToPair(s->new Tuple2<>(s, s.getFirstKey())).sortByKey();
         Map<String, Long> ret= new java.util.LinkedHashMap<String,Long>() ;
         tempReviewCount.take((int)topK).forEach(item->ret.put(item._1.getSecoundKey(),item._2));
         return ret;
@@ -119,23 +120,20 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
 
     @Override
     public String mostPopularMovieReviewedByKUsers(int numOfUsers) {
+    	String ret="";
     	if(numOfUsers < 0)
     		throw new RuntimeException();
     	
-    	List<Movie> popularMovie =  movieReviews
+    	JavaRDD<Movie> movies =  movieReviews
                 .mapToPair(s-> new Tuple2<>(s.getMovie().getProductId(), new Tuple2<>(s.getMovie().getScore(), 1)))
                 .reduceByKey((x1, x2)-> new Tuple2<>(x1._1 + x2._1, x1._2 + x2._2))
-                .filter(s -> s._2._2 >= numOfUsers).map(s -> new Movie(s._1, s._2._1)).collect();
-    	
-    	if(!popularMovie.isEmpty())
-    	{
-    		popularMovie.sort(new MovieScoreComparator());
-    		return popularMovie.get(0).getProductId();
-    	}
-    	else
-    	{
-    		return null;
-    	}
+                .filter(s -> s._2._2 >= numOfUsers).map(s -> new Movie(s._1, s._2._1));
+        if(movies.isEmpty()){
+        	return "";
+        }else{
+        	return movies.top(1).get(0).getProductId();
+        }
+    
     }
 
    
@@ -179,16 +177,17 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
         	throw new RuntimeException();
 
         Map<String, Double> ret = new HashMap<String, Double>();
-        JavaPairRDD<User,Double> usersHelpful =  movieReviews
+        JavaPairRDD<User,User> usersHelpful =  movieReviews
                     .mapToPair(a -> new Tuple2<>(a.getUserId(), a.getHelpfulness()))
                     .mapToPair(s -> new Tuple2<>(s._1, new Tuple2<>(Double.parseDouble(s._2.substring(0,s._2.lastIndexOf('/'))),
                             Double.parseDouble(s._2.substring(s._2.lastIndexOf('/') + 1, s._2.length())))))
                     .filter(s -> s._2._2 != 0)
-                    .reduceByKey((a,b) -> new Tuple2<>(a._1 + b._1, a._2 + b._2))
-                    .map(s -> new User(s._1, s._2._1/s._2._2)).mapToPair(s-> new Tuple2<>(s, s.getHelpfullness())).sortByKey();
+                    .reduceByKey((x1,x2) -> new Tuple2<>(x1._1 + x2._1, x1._2 + x2._2))
+                    .map(s -> new User(s._1, s._2._1/s._2._2)).mapToPair(s->new Tuple2<>(s, s)).sortByKey();
 
         // reduce list to only top K reviewers
-         usersHelpful.take(k).forEach(item->ret.put(item._1.getUserID(),item._1.getHelpfullness()));
+       
+        usersHelpful.take(k).forEach(item->ret.put(item._1.getUserID(),item._1.getHelpfullness()));
          return ret;
         // translate List into a Map
    /*     for (User user : usersList) {
@@ -276,7 +275,10 @@ public class MoviesStorage implements IMoviesStorage,Serializable {
             .entrySet()
             .forEach(pair -> printer.println("User id = [" + pair.getKey() + "], helpfulness [" + pair.getValue() + "]."));
 			break;
-
+			
+		case "moviesCount":
+			printer.println("Total number of distinct movies reviewed [" + moviesCount()+ "].");
+			break;
 		default:
 			break;
 		}
