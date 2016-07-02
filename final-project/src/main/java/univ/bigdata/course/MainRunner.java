@@ -45,6 +45,7 @@ public class MainRunner {
 		        } 
 		        br.close();
 			}catch (Exception e) {
+				e.printStackTrace();
 				throw new IllegalArgumentException("Program Second argument is illegal.");
 			}finally {
 				if(moviesStorage != null){
@@ -89,13 +90,12 @@ public class MainRunner {
 			
 			MovieRecommands mr = null;
 			
-			    try{
+			try {
 
-			    
-		    	//initialize movie storage and spark context
-		    	mr = new MovieRecommands(Movies_train,Movies_test);
-		    	Double ans = mr.getMAPValue();
-		    	System.out.println("MAP Value is" + ans);
+				// initialize movie storage and spark context
+				mr = new MovieRecommands(Movies_train, Movies_test);
+				Double ans = mr.getMAPValue();
+				System.out.println("MAP Value is" + ans);
 			}catch (Exception e) {
 				e.printStackTrace();
 				throw new IllegalArgumentException("Program Second argument is illegal.");
